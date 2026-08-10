@@ -2,11 +2,49 @@
 
 import { useState } from "react";
 import { mockSessions } from "../lib/mockData";
-import { TutoringSession } from "../types/session";
+import { requestReschedule } from "../lib/requestReschedule";
+import { RescheduleReason, TutoringSession } from "../types/session";
 import RescheduleModal from "./RescheduleModal";
 
 export default function SessionRescheduleWidget() {
   const [selectedSession, setSelectedSession] = useState<TutoringSession | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const handleRescheduleSubmit = async (
+    newDatetimeUTC: string,
+    reason: RescheduleReason
+  ): Promise<void> => {
+    if (!selectedSession) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    try {
+      const response = await requestReschedule({
+        sessionId: selectedSession.id,
+        newDatetimeUTC,
+        reason,
+      });
+
+      if (!response.success) {
+        setErrorMessage(response.error ?? "Unable to request reschedule");
+        return;
+      }
+
+      setSuccessMessage(`Request submitted for ${selectedSession.subject}.`);
+      setSelectedSession(null);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unexpected error";
+      setErrorMessage(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <section className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -22,7 +60,7 @@ export default function SessionRescheduleWidget() {
       </div>
 
       <div className="space-y-4">
-        {mockSessions.map((session) => (
+        {mockSessions.slice(0, 3).map((session) => (
           <article key={session.id} className="rounded-2xl border border-slate-200 p-5">
             <div className="flex items-center justify-between gap-4">
               <div>
@@ -50,10 +88,28 @@ export default function SessionRescheduleWidget() {
         ))}
       </div>
 
+      {successMessage && (
+        <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
+          {successMessage}
+        </div>
+      )}
+
+      {errorMessage && (
+        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+          {errorMessage}
+        </div>
+      )}
+
       <RescheduleModal
         session={selectedSession}
         isOpen={selectedSession !== null}
-        onClose={() => setSelectedSession(null)}
+        onClose={() => {
+          setSelectedSession(null);
+          setErrorMessage(null);
+        }}
+        onSubmit={handleRescheduleSubmit}
+        isSubmitting={isSubmitting}
+        errorMessage={errorMessage ?? undefined}
       />
     </section>
   );
