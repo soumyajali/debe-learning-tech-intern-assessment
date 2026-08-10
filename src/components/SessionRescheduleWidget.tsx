@@ -2,18 +2,19 @@
 
 import { useState } from "react";
 import { mockSessions } from "../lib/mockData";
-import { requestReschedule } from "../lib/requestReschedule";
-import { RescheduleReason, TutoringSession } from "../types/session";
+import { requestReschedule } from "../functions/requestReschedule";
+import { RescheduleReason, Session } from "../types/session";
+import { formatUtcForLocalDisplay } from "../utils/datetime";
 import RescheduleModal from "./RescheduleModal";
 
 export default function SessionRescheduleWidget() {
-  const [selectedSession, setSelectedSession] = useState<TutoringSession | null>(null);
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleRescheduleSubmit = async (
-    newDatetimeUTC: string,
+    newDatetimeUtc: string,
     reason: RescheduleReason
   ): Promise<void> => {
     if (!selectedSession) {
@@ -27,7 +28,7 @@ export default function SessionRescheduleWidget() {
     try {
       const response = await requestReschedule({
         sessionId: selectedSession.id,
-        newDatetimeUTC,
+        newDatetimeUtc,
         reason,
       });
 
@@ -66,9 +67,16 @@ export default function SessionRescheduleWidget() {
               <div>
                 <p className="text-lg font-semibold text-slate-900">{session.subject}</p>
                 <p className="mt-1 text-sm text-slate-600">with {session.teacherName}</p>
-                <p className="mt-3 text-sm text-slate-700">
-                  {new Date(session.datetime).toLocaleString()}
-                </p>
+                <div className="mt-3 space-y-1 text-sm text-slate-700">
+                  <p>
+                    <span className="font-semibold">Date:</span>{" "}
+                    {formatUtcForLocalDisplay(session.datetime)}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Status:</span>{" "}
+                    {session.status}
+                  </p>
+                </div>
               </div>
 
               <div className="flex flex-col items-end gap-3">
