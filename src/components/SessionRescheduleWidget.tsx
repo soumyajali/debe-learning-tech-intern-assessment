@@ -48,8 +48,8 @@ export default function SessionRescheduleWidget() {
   };
 
   return (
-    <section className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="mb-6 flex items-center justify-between">
+    <section className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-6 shadow-sm">
+      <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4">
         <div>
           <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
             Upcoming Sessions
@@ -58,11 +58,14 @@ export default function SessionRescheduleWidget() {
             Your student&apos;s next tutoring sessions
           </p>
         </div>
+        <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-sky-800">
+          Parent Portal
+        </span>
       </div>
 
       <div className="space-y-4">
         {mockSessions.slice(0, 3).map((session) => (
-          <article key={session.id} className="rounded-2xl border border-slate-200 p-5">
+          <article key={session.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-sky-300 hover:shadow-md">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-lg font-semibold text-slate-900">{session.subject}</p>
@@ -86,7 +89,7 @@ export default function SessionRescheduleWidget() {
                 <button
                   type="button"
                   onClick={() => setSelectedSession(session)}
-                  className="rounded-xl border border-sky-600 px-4 py-2 text-sm font-semibold text-sky-700 transition hover:bg-sky-50"
+                  className="rounded-xl border border-sky-600 px-4 py-2 text-sm font-semibold text-sky-700 transition hover:bg-sky-50 hover:text-sky-900 focus:outline-none focus:ring-2 focus:ring-sky-300"
                 >
                   Request Reschedule
                 </button>

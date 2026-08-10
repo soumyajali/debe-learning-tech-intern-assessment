@@ -121,7 +121,7 @@ export default function RescheduleModal({
               Rescheduling session for <span className="font-semibold text-slate-700">{session.subject}</span> with {session.teacherName}.
             </p>
           </div>
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-600">
+          <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-600">
             {session.id}
           </span>
         </div>
