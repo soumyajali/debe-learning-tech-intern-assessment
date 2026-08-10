@@ -1,26 +1,26 @@
-import { TutoringSession } from "../types/session";
+import { Session } from "../types/session";
 
-export const INITIAL_SESSIONS: TutoringSession[] = [
+export const INITIAL_SESSIONS: Session[] = [
   {
-    id: "sess-101",
-    subject: "AP Physics C",
-    teacherName: "Dr. Aris Thorne",
-    datetime: "2026-08-11T16:00:00.000Z",
-    status: "scheduled",
+    id: "session-1",
+    subject: "Mathematics",
+    teacherName: "Sarah Johnson",
+    datetime: "2026-08-11T15:00:00.000Z",
+    status: "Confirmed",
   },
   {
-    id: "sess-102",
-    subject: "Linear Algebra",
-    teacherName: "Prof. Maya Lin",
-    datetime: "2026-08-12T18:30:00.000Z",
-    status: "scheduled",
+    id: "session-2",
+    subject: "Physics",
+    teacherName: "Michael Lee",
+    datetime: "2026-08-12T17:30:00.000Z",
+    status: "Confirmed",
   },
   {
-    id: "sess-103",
-    subject: "Organic Chemistry",
-    teacherName: "Elena Rostova",
-    datetime: "2026-08-14T14:00:00.000Z",
-    status: "scheduled",
+    id: "session-3",
+    subject: "Computer Science",
+    teacherName: "Emily Davis",
+    datetime: "2026-08-14T13:00:00.000Z",
+    status: "Confirmed",
   },
 ];
 

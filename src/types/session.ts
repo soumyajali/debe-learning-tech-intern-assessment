@@ -1,12 +1,8 @@
-export type SessionStatus =
-  | "scheduled"
-  | "reschedule_requested"
-  | "completed"
-  | "cancelled";
+export type SessionStatus = "Confirmed" | "Reschedule Requested" | "Completed" | "Cancelled";
 
 export type RescheduleReason = "Conflict" | "Illness" | "Time zone" | "Other";
 
-export interface TutoringSession {
+export interface Session {
   id: string;
   subject: string;
   teacherName: string;
@@ -16,7 +12,7 @@ export interface TutoringSession {
 
 export interface RescheduleRequest {
   sessionId: string;
-  newDatetimeUTC: string;
+  newDatetimeUtc: string;
   reason: RescheduleReason;
 }
 
