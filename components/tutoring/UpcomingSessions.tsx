@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { upcomingSessions } from "../../lib/mockData";
 import { TutoringSession } from "../../types/tutoring";
 import SessionCard from "./SessionCard";
+import RescheduleModal from "./RescheduleModal";
 
 export default function UpcomingSessions() {
   const [sessions, setSessions] = useState<TutoringSession[]>(upcomingSessions);
@@ -11,7 +12,22 @@ export default function UpcomingSessions() {
 
   const handleRequestReschedule = (session: TutoringSession) => {
     setSelectedSession(session);
-    // Modal state would be managed here or via a context/portal
+  };
+
+  const handleModalClose = () => {
+    setSelectedSession(null);
+  };
+
+  const handleModalSuccess = (session: TutoringSession) => {
+    // Optimistically update the session status to "pending"
+    setSessions(prev => 
+      prev.map(s => s.id === session.id ? { ...s, status: "pending" } : s)
+    );
+    // Modal can stay open to show success state, user will close it via 'Done' button
+    // which maps to onClose in the modal or they trigger onSuccess then we close.
+    // Actually, in our modal design, the success state is shown INSIDE the modal.
+    // The "Done" button calls `onSuccess`, so we close the modal here.
+    setSelectedSession(null);
   };
 
   return (
@@ -26,18 +42,11 @@ export default function UpcomingSessions() {
         ))}
       </div>
       
-      {/* 
-        This is a placeholder for the modal. We will replace this 
-        with the actual RescheduleModal component later in the plan.
-      */}
-      {selectedSession && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-          <div className="bg-white p-6 rounded-xl shadow-xl">
-            <p>Modal Placeholder for {selectedSession.subject}</p>
-            <button onClick={() => setSelectedSession(null)} className="mt-4 px-4 py-2 bg-gray-100 rounded">Close</button>
-          </div>
-        </div>
-      )}
+      <RescheduleModal
+        session={selectedSession}
+        onClose={handleModalClose}
+        onSuccess={handleModalSuccess}
+      />
     </div>
   );
 }

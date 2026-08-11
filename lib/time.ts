@@ -12,10 +12,11 @@ export function getBrowserTimeZone(): string {
  * Converts a local date string (YYYY-MM-DD) and a local time string (HH:MM AM/PM)
  * into a UTC ISO string, respecting the provided local timezone.
  */
-export function localDateTimeToUtc(dateStr: string, timeStr: string, timeZone: string): string {
+export function localDateTimeToUtc(dateStr: string, timeStr: string): string {
   // Parsing time string
   const [time, modifier] = timeStr.split(" ");
-  let [hours, minutes] = time.split(":").map(Number);
+  let hours = Number(time.split(":")[0]);
+  const minutes = Number(time.split(":")[1]);
 
   if (modifier === "PM" && hours < 12) {
     hours += 12;
@@ -55,7 +56,6 @@ export function isSameSlot(firstUtc: string, secondUtc: string): boolean {
 export function generateTimeSlots(selectedDate: string): TimeSlot[] {
   // Generate slots from 8:00 AM to 8:00 PM in 30 min intervals
   const slots: TimeSlot[] = [];
-  const timeZone = getBrowserTimeZone();
   
   for (let i = 8; i <= 20; i++) {
     for (let j = 0; j < 2; j++) {
@@ -64,7 +64,7 @@ export function generateTimeSlots(selectedDate: string): TimeSlot[] {
       const ampm = i >= 12 ? "PM" : "AM";
       const timeStr = `${hour12}:${minutes} ${ampm}`;
       
-      const utcDatetime = localDateTimeToUtc(selectedDate, timeStr, timeZone);
+      const utcDatetime = localDateTimeToUtc(selectedDate, timeStr);
       
       slots.push({
         time: timeStr,
