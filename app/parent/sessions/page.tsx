@@ -1,4 +1,5 @@
 import React from "react";
+import UpcomingSessions from "../../../components/tutoring/UpcomingSessions";
 
 export default function SessionsPage() {
   return (
@@ -13,10 +14,7 @@ export default function SessionsPage() {
             <p className="text-[#6B7280]">Keep track of what&apos;s coming next.</p>
           </header>
           
-          {/* UpcomingSessions widget will go here */}
-          <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/40 p-6 min-h-[400px] flex items-center justify-center">
-            <p className="text-[#6B7280]">Widget coming soon...</p>
-          </div>
+          <UpcomingSessions />
         </div>
 
         {/* Right/Bottom Content: 3D Scene */}
