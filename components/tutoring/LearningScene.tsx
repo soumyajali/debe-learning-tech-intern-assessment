@@ -100,7 +100,7 @@ export default function LearningScene() {
         
         <GeometricObjects />
         
-        <Environment preset="city" opacity={0.2} background={false} />
+        <Environment preset="city" background={false} />
       </Canvas>
     </div>
   );
