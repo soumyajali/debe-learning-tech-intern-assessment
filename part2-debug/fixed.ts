@@ -15,7 +15,7 @@ interface BookingRequest {
 // Why it matters: Without this check, an unauthenticated client or malicious actor 
 // could submit a request and potentially create bookings on behalf of any studentId.
 export const bookSession = functions.https.onCall(
-  async (data: BookingRequest, context) => {
+  async (data: BookingRequest, context: functions.https.CallableContext) => {
     if (!context.auth) {
       throw new functions.https.HttpsError(
         "unauthenticated",
