@@ -1,156 +1,96 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Environment, Float, Html, Loader } from "@react-three/drei";
+import { Float, Sparkles } from "@react-three/drei";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { useRef } from "react";
 import * as THREE from "three";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-gsap.registerPlugin(ScrollTrigger);
+interface SceneProps {
+  modalOpen: boolean;
+}
 
-export default function Scene() {
+export default function Scene({ modalOpen }: SceneProps) {
   return (
     <div className="fixed inset-0 z-0 pointer-events-none">
       <Canvas
-        className="h-full w-full"
-        shadows
         dpr={[1, 1.5]}
-        camera={{ position: [0, 1.2, 5.8], fov: 42 }}
+        camera={{ position: [0, 0.35, 7], fov: 42 }}
         gl={{ antialias: true, powerPreference: "high-performance" }}
-        onCreated={({ gl }) => {
-          gl.outputColorSpace = THREE.SRGBColorSpace;
-        }}
+        fallback={<div aria-hidden="true" />}
       >
-        <Suspense fallback={<Html center><Loader /></Html>}>
-          <SceneContent />
-        </Suspense>
+        <Classroom modalOpen={modalOpen} />
       </Canvas>
     </div>
   );
 }
 
-function SceneContent() {
-  const { camera } = useThree();
-  const root = useRef<THREE.Group>(null);
-  const scrollProgress = useRef(0);
-
-  const targetPosition = useMemo(() => new THREE.Vector3(0, 1.15, 4.8), []);
-  const targetRotation = useMemo(() => new THREE.Euler(-0.08, 0, 0), []);
-  const targetModelPosition = useMemo(() => new THREE.Vector3(0, 0, 0), []);
-  const targetModelRotation = useMemo(() => new THREE.Euler(0.16, -0.36, 0), []);
-
-  useEffect(() => {
-    const isMobile = window.innerWidth < 768;
-
-    const timeline = gsap.timeline({
-      defaults: { ease: "power2.out" },
-      scrollTrigger: {
-        trigger: "#scroll-container",
-        start: "top top",
-        end: "bottom bottom",
-        scrub: true,
-        onUpdate: (self) => {
-          scrollProgress.current = self.progress;
-        },
-      },
-    });
-
-    const cameraPosition = isMobile
-      ? new THREE.Vector3(0, 0.95, 5.2)
-      : new THREE.Vector3(0, 1.28, 5.6);
-
-    const cameraRotation = isMobile
-      ? new THREE.Euler(-0.05, 0, 0)
-      : new THREE.Euler(-0.12, 0, 0);
-
-    timeline
-      .to(camera.position, {
-        x: cameraPosition.x,
-        y: cameraPosition.y,
-        z: cameraPosition.z,
-        duration: 1,
-      })
-      .to(camera.rotation, {
-        x: cameraRotation.x,
-        y: cameraRotation.y,
-        z: cameraRotation.z,
-        duration: 1,
-      }, 0)
-      .to(targetModelPosition, {
-        y: -0.32,
-        duration: 1,
-      }, 0);
-
-    return () => {
-      timeline.kill();
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
-    };
-  }, [camera, targetModelPosition]);
+function Classroom({ modalOpen }: SceneProps) {
+  const group = useRef<THREE.Group>(null);
+  const clockHand = useRef<THREE.Group>(null);
 
   useFrame((state, delta) => {
-    const targetScroll = scrollProgress.current;
+    const eased = 1 - Math.exp(-delta * 3.5);
+    const targetY = modalOpen ? -0.55 : 0;
+    const targetRotation = modalOpen ? -0.24 : 0.1;
 
-    camera.position.lerp(targetPosition.clone().set(
-      targetPosition.x,
-      targetPosition.y + (targetScroll - 0.5) * 0.45,
-      targetPosition.z - targetScroll * 1.8
-    ), 1 - Math.pow(0.001, delta));
-
-    camera.rotation.x = THREE.MathUtils.lerp(camera.rotation.x, targetRotation.x, delta * 4);
-    camera.rotation.y = THREE.MathUtils.lerp(camera.rotation.y, targetRotation.y + targetScroll * 0.35, delta * 4);
-
-    if (root.current) {
-      root.current.position.lerp(targetModelPosition, delta * 4);
-      root.current.rotation.x = THREE.MathUtils.lerp(root.current.rotation.x, targetModelRotation.x, delta * 4);
-      root.current.rotation.y = THREE.MathUtils.lerp(root.current.rotation.y, targetModelRotation.y + targetScroll * 2.4, delta * 4);
+    if (group.current) {
+      group.current.position.y = THREE.MathUtils.lerp(group.current.position.y, targetY, eased);
+      group.current.rotation.y = THREE.MathUtils.lerp(group.current.rotation.y, targetRotation, eased);
+      group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, modalOpen ? 0.08 : 0, eased);
+    }
+    if (clockHand.current) {
+      clockHand.current.rotation.z = state.clock.elapsedTime * 0.45;
     }
   });
 
   return (
     <>
-      <color attach="background" args={["#07111a"]} />
-      <fog attach="fog" args={["#07111a", 7, 15]} />
+      <color attach="background" args={["#07131f"]} />
+      <fog attach="fog" args={["#07131f", 8, 17]} />
+      <ambientLight intensity={0.7} color="#b9e7ff" />
+      <pointLight position={[-4, 4, 4]} intensity={45} color="#31c6ff" distance={10} />
+      <pointLight position={[4, 1, 3]} intensity={28} color="#a78bfa" distance={9} />
+      <Sparkles count={70} scale={[12, 7, 5]} size={2} speed={0.25} color="#b8efff" />
 
-      <ambientLight intensity={0.4} />
-      <directionalLight
-        castShadow
-        position={[3, 8, 5]}
-        intensity={2.2}
-        color="#b8eaff"
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
-        shadow-camera-far={20}
-        shadow-camera-left={-6}
-        shadow-camera-right={6}
-        shadow-camera-top={6}
-        shadow-camera-bottom={-6}
-      />
+      <Float speed={1.1} rotationIntensity={0.2} floatIntensity={0.7}>
+        <group ref={group} position={[1.85, -0.15, 0]} rotation={[0, 0.1, 0]}>
+          <group rotation={[0.15, -0.55, 0.08]}>
+            <mesh castShadow>
+              <boxGeometry args={[2.4, 0.2, 1.65]} />
+              <meshStandardMaterial color="#3b82f6" roughness={0.35} metalness={0.25} />
+            </mesh>
+            <mesh position={[0, 0.16, 0]} castShadow>
+              <boxGeometry args={[2.25, 0.16, 1.5]} />
+              <meshStandardMaterial color="#dbeafe" roughness={0.6} />
+            </mesh>
+            <mesh position={[0, 0.3, 0]}>
+              <boxGeometry args={[1.5, 0.12, 0.98]} />
+              <meshStandardMaterial color="#fbbf24" roughness={0.42} />
+            </mesh>
+          </group>
 
-      <Environment preset="city" />
-
-      <Float speed={1.2} rotationIntensity={0.55} floatIntensity={1.2}>
-        <group ref={root}>
-          <mesh position={[-1.2, 0, 0]} castShadow receiveShadow>
-            <icosahedronGeometry args={[0.95, 1]} />
-            <meshPhysicalMaterial color="#4ad6ff" roughness={0.2} metalness={0.15} transmission={0.1} />
-          </mesh>
-
-          <mesh position={[1.02, 0.05, -0.24]} rotation={[0.3, 0.2, 0]} castShadow>
-            <octahedronGeometry args={[0.78, 0]} />
-            <meshPhysicalMaterial color="#91f7b7" roughness={0.3} metalness={0.25} />
-          </mesh>
-
-          <mesh position={[0.08, -1.05, -0.2]} rotation={[0, 0.5, 0]} castShadow receiveShadow>
-            <torusGeometry args={[1.45, 0.045, 16, 128]} />
-            <meshStandardMaterial color="#bda7ff" roughness={0.55} metalness={0.3} />
-          </mesh>
+          <group position={[-1.65, 1.55, -0.2]}>
+            <mesh>
+              <cylinderGeometry args={[0.75, 0.75, 0.12, 48]} />
+              <meshStandardMaterial color="#eff6ff" roughness={0.3} metalness={0.12} />
+            </mesh>
+            <mesh position={[0, 0.07, 0]}>
+              <cylinderGeometry args={[0.64, 0.64, 0.02, 48]} />
+              <meshStandardMaterial color="#172554" roughness={0.5} />
+            </mesh>
+            <group ref={clockHand} position={[0, 0.1, 0]}>
+              <mesh position={[0, 0.3, 0]}>
+                <boxGeometry args={[0.045, 0.58, 0.04]} />
+                <meshBasicMaterial color="#67e8f9" />
+              </mesh>
+            </group>
+          </group>
         </group>
       </Float>
 
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.62, 0]} receiveShadow>
-        <circleGeometry args={[3.2, 128]} />
-        <meshStandardMaterial color="#152b35" roughness={0.93} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2.2, 0]}>
+        <planeGeometry args={[30, 30]} />
+        <meshStandardMaterial color="#0c2333" roughness={0.9} />
       </mesh>
     </>
   );
