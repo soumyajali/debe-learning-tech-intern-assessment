@@ -11,14 +11,11 @@ interface BookingRequest {
   slot: string;
   subject: string;
 }
-// Fix: The original callback was not async, so it could not await
-// Firestore operations. Returning before those operations complete
-// can produce incorrect success responses.
+// Fix 1 (Security): The original function did not verify authentication.
+// Why it matters: Without this check, an unauthenticated client or malicious actor 
+// could submit a request and potentially create bookings on behalf of any studentId.
 export const bookSession = functions.https.onCall(
   async (data: BookingRequest, context) => {
-    // Fix: The original function did not verify authentication.
-    // Without this check, an unauthenticated client could submit a
-    // studentId and potentially create a booking on behalf of another user.
     if (!context.auth) {
       throw new functions.https.HttpsError(
         "unauthenticated",
@@ -26,24 +23,22 @@ export const bookSession = functions.https.onCall(
       );
     }
 
-    // Fix: The original function used await inside a non-async callback.
-    // The callable handler must be async so asynchronous Firestore
-    // operations can be awaited before the function returns.
-    
     const booking = {
       studentId: data.studentId,
       teacherId: data.teacherId,
       slot: data.slot,
       subject: data.subject,
       status: "confirmed",
+      // Best practice: use serverTimestamp rather than client-provided Date
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     };
 
     const teacherRef = db.collection("teachers").doc(data.teacherId);
 
-    // Fix: Firestore get() returns a Promise. The original code tried
-    // to access existing.docs before the query had completed, so the
-    // slot availability check could not work correctly.
+    // Fix 2 (Typing): Firestore get() returns a Promise. The original code tried
+    // to access existing.docs.length before awaiting the query snapshot.
+    // Why it matters: Property 'docs' does not exist on type 'Promise<QuerySnapshot>'. 
+    // This causes a runtime crash and fails TS compilation, meaning the conflict check never runs.
     const existing = await teacherRef
       .collection("bookings")
       .where("slot", "==", data.slot)
@@ -56,10 +51,15 @@ export const bookSession = functions.https.onCall(
       };
     }
 
-    // Fix: The original write was not awaited. The function could return
-    // success before Firestore had finished saving the booking, causing
-    // clients to receive a false success response if the write failed.
-    await db.collection("bookings").add(booking);
+    // Fix 3 (Logic): The original code checked for conflicts in the teacher's subcollection 
+    // (`teachers/{id}/bookings`) but wrote the new booking to the root `db.collection("bookings")`.
+    // Why it matters: The conflict check would never find the root bookings, meaning the same 
+    // teacher slot could be double-booked indefinitely. We must write to the same subcollection we query.
+    //
+    // Fix 4 (Async/Await): The original write was not awaited (and the callback was not async).
+    // Why it matters: Cloud Functions terminate once a result is returned. If the write isn't awaited, 
+    // the function might shut down before Firestore finishes saving the document, leading to data loss.
+    await teacherRef.collection("bookings").add(booking);
 
     return {
       success: true,
