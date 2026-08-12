@@ -1,4 +1,4 @@
-import { INITIAL_SESSIONS, mockSessions } from "../lib/mockData";
+import { mockSessions } from "../lib/mockData";
 import { RescheduleReason, RescheduleRequest, RescheduleResponse } from "../types/session";
 
 // This local Cloud Function-shaped API mirrors a Firebase callable function.

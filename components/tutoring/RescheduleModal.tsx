@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useSyncExternalStore } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TutoringSession, RescheduleReason } from "../../types/tutoring";
 import { requestReschedule } from "../../functions/requestReschedule";
@@ -14,19 +14,21 @@ interface RescheduleModalProps {
   onSuccess: (session: TutoringSession) => void;
 }
 
+function subscribeToTimeZone() {
+  return () => undefined;
+}
+
+function getTimeZoneSnapshot() {
+  return getBrowserTimeZone();
+}
+
 export default function RescheduleModal({ session, onClose, onSuccess }: RescheduleModalProps) {
   const [requestedDatetime, setRequestedDatetime] = useState<string>("");
   const [reason, setReason] = useState<RescheduleReason | "">("");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<boolean>(false);
-  const [localTimeZone, setLocalTimeZone] = useState<string>("");
-
-  useEffect(() => {
-    // We only want this to run on client
-    setLocalTimeZone(getBrowserTimeZone());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const localTimeZone = useSyncExternalStore(subscribeToTimeZone, getTimeZoneSnapshot, () => "");
 
   const handleSubmit = async () => {
     if (!session) return;

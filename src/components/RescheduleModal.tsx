@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { RescheduleReason, Session } from "../types/session";
 import { combineLocalDateAndTime, formatDateInputValue, formatTimeInputValue } from "../utils/datetime";
 
@@ -29,27 +29,23 @@ export default function RescheduleModal({
   const [reason, setReason] = useState<RescheduleReason>("Conflict");
   const [clientError, setClientError] = useState<string | null>(null);
   const [successState, setSuccessState] = useState(false);
+  const [minimumDateTime, setMinimumDateTime] = useState<Date | null>(null);
 
   const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-  const minDate = useMemo(() => {
-    const minDateTime = new Date(Date.now() + MIN_LEAD_HOURS * 60 * 60 * 1000);
-    return formatDateInputValue(minDateTime);
-  }, []);
-
-  const minTime = useMemo(() => {
-    const minDateTime = new Date(Date.now() + MIN_LEAD_HOURS * 60 * 60 * 1000);
-    return formatTimeInputValue(minDateTime);
-  }, []);
-
   useEffect(() => {
     if (isOpen && session) {
-      const now = new Date(Date.now() + MIN_LEAD_HOURS * 60 * 60 * 1000);
-      setNewDate(formatDateInputValue(now));
-      setNewTime(formatTimeInputValue(now));
-      setReason("Conflict");
-      setClientError(null);
-      setSuccessState(false);
+      const timer = window.setTimeout(() => {
+        const minimum = new Date(Date.now() + MIN_LEAD_HOURS * 60 * 60 * 1000);
+        setMinimumDateTime(minimum);
+        setNewDate(formatDateInputValue(minimum));
+        setNewTime(formatTimeInputValue(minimum));
+        setReason("Conflict");
+        setClientError(null);
+        setSuccessState(false);
+      }, 0);
+
+      return () => window.clearTimeout(timer);
     }
   }, [isOpen, session]);
 
@@ -136,7 +132,7 @@ export default function RescheduleModal({
               name="newDate"
               type="date"
               value={newDate}
-              min={minDate}
+              min={minimumDateTime ? formatDateInputValue(minimumDateTime) : undefined}
               onChange={(event) => setNewDate(event.target.value)}
               className="mt-1.5 w-full rounded-lg border border-slate-300 p-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               required
@@ -152,7 +148,7 @@ export default function RescheduleModal({
               name="newTime"
               type="time"
               value={newTime}
-              min={minTime}
+              min={minimumDateTime ? formatTimeInputValue(minimumDateTime) : undefined}
               onChange={(event) => setNewTime(event.target.value)}
               className="mt-1.5 w-full rounded-lg border border-slate-300 p-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               required

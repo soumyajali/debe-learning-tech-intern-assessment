@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { generateTimeSlots, TimeSlot } from "../../lib/time";
 
 interface DateTimePickerProps {
@@ -10,26 +10,12 @@ interface DateTimePickerProps {
 
 export default function DateTimePicker({ onDateTimeSelect, disabled }: DateTimePickerProps) {
   const [selectedDate, setSelectedDate] = useState<string>("");
-  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [selectedTimeUtc, setSelectedTimeUtc] = useState<string>("");
-
-  useEffect(() => {
-    // Default to today
-    const today = new Date();
-    const dateStr = today.toISOString().split("T")[0];
-    setSelectedDate(dateStr);
-  }, []);
-
-  useEffect(() => {
-    if (selectedDate) {
-      const slots = generateTimeSlots(selectedDate);
-      setTimeSlots(slots);
-      setSelectedTimeUtc(""); // Reset time when date changes
-    }
-  }, [selectedDate]);
+  const timeSlots: TimeSlot[] = selectedDate ? generateTimeSlots(selectedDate) : [];
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedDate(e.target.value);
+    setSelectedTimeUtc("");
   };
 
   const handleTimeSelect = (utcDatetime: string) => {
