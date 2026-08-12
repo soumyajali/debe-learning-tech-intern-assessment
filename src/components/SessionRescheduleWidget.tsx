@@ -1,17 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { mockSessions } from "../lib/mockData";
 import { requestReschedule } from "../functions/requestReschedule";
 import { RescheduleReason, Session } from "../types/session";
 import { formatUtcForLocalDisplay } from "../utils/datetime";
 import RescheduleModal from "./RescheduleModal";
 
+const emptySubscribe = () => () => {};
+
 export default function SessionRescheduleWidget() {
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  // During hydration, use the server snapshot so the initial markup is identical.
+  // React then switches to the browser snapshot and shows the parent's local time.
+  const hasMounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
   const handleRescheduleSubmit = async (
     newDatetimeUtc: string,
@@ -73,7 +78,12 @@ export default function SessionRescheduleWidget() {
                 <div className="mt-3 space-y-1 text-sm text-slate-700">
                   <p>
                     <span className="font-semibold">Date:</span>{" "}
-                    {formatUtcForLocalDisplay(session.datetime)}
+                    {formatUtcForLocalDisplay(
+                      session.datetime,
+                      hasMounted
+                        ? undefined
+                        : { locale: "en-US", timeZone: "UTC" }
+                    )}
                   </p>
                   <p>
                     <span className="font-semibold">Status:</span>{" "}

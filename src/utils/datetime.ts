@@ -42,20 +42,24 @@ export function combineLocalDateAndTime(dateValue: string, timeValue: string): D
   return localDate;
 }
 
-export function formatUtcForLocalDisplay(utcIsoString: string): string {
+export function formatUtcForLocalDisplay(
+  utcIsoString: string,
+  options?: { locale?: string; timeZone?: string }
+): string {
   const date = new Date(utcIsoString);
 
   if (Number.isNaN(date.getTime())) {
     return "Invalid date";
   }
 
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(options?.locale, {
     weekday: "short",
     month: "short",
     day: "numeric",
     year: "numeric",
     hour: "numeric",
     minute: "2-digit",
+    timeZone: options?.timeZone,
   }).format(date);
 }
 
